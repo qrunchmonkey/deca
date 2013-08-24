@@ -1,10 +1,20 @@
 ---
-title: Welcome to Middleman
+title: Microsecond International
 ---
+<!-- I'm glad you're here. As you know, at Microsecond International we've found a way to convert wasted time directly into STUFF. That's right! It's basically the American Dream on crack. Time's not a-wasting. Get slacking! --!>
 
-<div class="welcome">
-  <h1>Middleman is Watching</h1>
-  <p class="doc">
-    <%= link_to "Read Online Documentation", "http://middlemanapp.com/" %>
-  </p><!-- .doc -->
+<div id="game">
+  <div class="loading">Loading...</div>
 </div><!-- .welcome -->
+
+<script>
+$(document).ready(function() {
+   SetupGame();
+   var count = 0;
+   $('#game').click( function() {
+   count++;
+        SayHTML('I <i>really</i> hope this works '+ count + ' times...');
+   });
+});
+
+</script>
