@@ -9,6 +9,9 @@ GAME_DATA.bank = 0;
 GAME_DATA.rateOfTime = 1.0;
 GAME_DATA.numberOfClocks = 0;
 
+GAME_DATA.inventory = {};
+GAME_DATA.marketplace = [];
+
 GAME_DATA.consoleQueue = [];
 
 function SetupGame() {
@@ -27,8 +30,100 @@ function SetupGame() {
     //TODO: load stuff here
 
     UpdateBar();
+    SetupMarketplace();
     StartGame();
 }
+
+function MarketplaceItem(id, name, description, startPrice, priceFactor, visible) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.startPrice = startPrice;
+    this.priceFactor = priceFactor;
+    this.visible = typeof visible !== 'undefined' ? visible : false;
+    
+    this.priceOfNthItem = function(count) {
+        return Math.floor(this.startPrice * Math.pow(priceFactor, count));
+    }
+    
+    this.nextPrice = function() {
+        var countOfThese = GAME_DATA.inventory[this.id];
+        return this.priceOfNthItem(countOfThese)
+    }
+    
+    this.buy = function() {
+        var priceOfThis = this.nextPrice();
+        
+        if (GAME_DATA.bank >= priceOfThis) {
+            GAME_DATA.bank -= priceOfThis;
+            GAME_DATA.inventory[this.id] += 1;
+            BoughtItem(this);
+            if (this.priceFactor == 0) {
+                RemoveMarketplaceItem(this);
+            }
+        } else {
+            SayHTML('<i>( You can\'t afford that. Nice try.</i>');
+        }
+    }
+}
+
+function AddMarketplaceItem(item) {
+    if (!GAME_DATA.marketplace[item.id]) {
+        GAME_DATA.marketplace[item.id] = item;
+        if (!GAME_DATA.inventory[item.id]) {
+            GAME_DATA.inventory[item.id] = 0;
+        }
+        
+        var item_html    = '<div class="item" id="' + item.id + '">';
+        item_html       += '<span class="name">'+ item.name + '</span>';
+        item_html       += '<span class="price">' + item.nextPrice() + ' $econds</span>';
+        item_html       += '<span class="desc">' + item.description + '</span>';
+        item_html       += '</div>';
+        
+        $(item_html).appendTo(GAME_DATA.menu_el).click(function() {
+            item.buy();
+        });
+    }
+}
+
+function RemoveMarketplaceItem(item) {
+    delete GAME_DATA.marketplace[item.id];
+}
+
+function SetupMarketplace() {
+    AddMarketplaceItem(new MarketplaceItem(
+                                            "clock", /* id */
+                                            "Clock", /* name */
+                                            "Time goes slower but is more valuable. As they say, 'A watched clock never boils.", /* description */
+                                            10, /* start price */
+                                            1.1, /* price factor [$ * (f^n)] */
+                                            true /* visible */
+                                            ));
+                                            
+    AddMarketplaceItem(new MarketplaceItem(
+                                            "tchotchke", /* id */
+                                            "Tchotchke", /* name */
+                                            "Looking at things might help time go faster.", /* description */
+                                            45, /* start price */
+                                            1.1, /* price factor [$ * (f^n)] */
+                                            true /* visible */
+                                            ));
+    
+    AddMarketplaceItem(new MarketplaceItem(
+                                            "computer", /* id */
+                                            "Computer", /* name */
+                                            "Unlocks new and exciting ways of wasting time.", /* description */
+                                            90, /* start price */
+                                            0 /* price factor [$ * (f^n)] */
+                                            ));
+                                            
+
+}
+
+function BoughtItem(item) {
+    SayHTML('<i>(You add a shiny new ' + item.name + ' to your collection)</i>');
+}
+
 
 function StartGame() {
     /* TODO: By the time this is called from SetupGame() I should have loaded any saved game data */
