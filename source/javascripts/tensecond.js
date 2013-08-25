@@ -1,6 +1,6 @@
 var GAME_DATA = {};
 
-GAME_DATA.bank = 0;
+GAME_DATA.bank = 1000;
 
 GAME_DATA.inventory = {};
 GAME_DATA.marketplace = {};
@@ -178,18 +178,19 @@ function BoughtItem(item) {
 }
 
 function AchiveHobby(item) {
-    var elegibleHobbies = _.filter(LANG.hobbies, function (hobby) {GAME_DATA.hobbies[hobby] < LANG.hobby_levels.length - 1 } );
+    var elegibleHobbies = _.filter(LANG.hobbies, function (hobby) {var count = GAME_DATA.hobbies[hobby] || 0; return count < LANG.hobby_levels.length - 1 } );
     var hobby = elegibleHobbies[Math.floor(elegibleHobbies.length * Math.random())];
-    
+    console.log(elegibleHobbies);
     var level = GAME_DATA.hobbies[hobby] || 0;
     level++;
     
     var phrase = '<i>(You are now a ' + LANG.hobby_levels[level] + ' ' + hobby + '.)</i>';
     
-    if (_.filter(LANG.hobbies, function (hobby) {GAME_DATA.hobbies[hobby] < LANG.hobby_levels.length - 1 } ).length == 0) {
-        phrase += '<br><br><i>(You can\t learn any more hobbies.)</i>';
+    if (_.filter(LANG.hobbies, function (hobby) {var count = GAME_DATA.hobbies[hobby] || 0; return count < LANG.hobby_levels.length - 1 } ).length == 0) {
+        phrase += '<br><br><i>(You can\'t learn any more hobbies.)</i>';
         RemoveMarketplaceItem(item);
     }
+    SayHTML(phrase);
 }
 
 function StartGame() {
