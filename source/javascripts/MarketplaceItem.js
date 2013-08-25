@@ -27,7 +27,7 @@ function MarketplaceItem(id, name, description, startPrice, priceFactor, visible
                 RemoveMarketplaceItem(this);
             }
         } else {
-            SayHTML('<i>(You can\'t afford that. Nice try.)</i>');
+            //SayHTML('<i>(You can\'t afford that. Nice try.)</i>');
         }
     }
     

@@ -1,6 +1,6 @@
 var GAME_DATA = {};
 
-GAME_DATA.bank = 1000;
+GAME_DATA.bank = 0;
 
 GAME_DATA.inventory = {};
 GAME_DATA.marketplace = {};
@@ -12,13 +12,13 @@ GAME_DATA.rateOfTime = function() {
     
     var hobbyMultiplier = 1;
     _.forEach(GAME_DATA.hobbies, function(value, key, list) {
-        hobbyMultiplier *= Math.pow(1.05, value);
+        hobbyMultiplier *= Math.pow(1.04, value);
     });
     
-    var lightCount = GAME_DATA["light"] || 0;
+    var lightCount = GAME_DATA.inventory["light"] || 0;
+    
     var lightMultiplier = 1 * Math.pow(1.1, lightCount);
-
-    return 1.0 * Math.pow(0.98, GAME_DATA.inventory["clock"]) * Math.pow(1.07, GAME_DATA.inventory["tchotchke"]) * hobbyMultiplier * lightMultiplier;
+    return 1.0 * Math.pow(0.98, GAME_DATA.inventory["clock"]) * Math.pow(1.025, GAME_DATA.inventory["tchotchke"]) * hobbyMultiplier * lightMultiplier;
 };
 
 
@@ -93,7 +93,14 @@ function SetupMarketplace() {
                                             0 /* price factor [$ * (f^n)] */
                                             ));
                                             
-
+    AddMarketplaceItem(new MarketplaceItem(
+                                            "room", /* id */
+                                            "Room Upgrade", /* name */
+                                            "Adds 10% to your profit by impressing clients.", /* description */
+                                            360, /* start price */
+                                            1.1 /* price factor [$ * (f^n)] */
+                                            ));
+    
 }
 
 function BoughtItem(item) {
@@ -166,6 +173,10 @@ function BoughtItem(item) {
         SayHTML('<i>(You have unlocked another page for your spreadsheets)</i>');
     } else if (item.id == "hobby") {
         AchiveHobby(item);
+    } else if (item.id == "room") {
+        SayHTML('<i>(As if by magic, the room suddenly becomes a little nicer.)</i>');
+        var roomLevel = GAME_DATA.inventory["room"];
+        GAME_DATA.room_description = LANG.RandomQuality(roomLevel + 1, roomLevel);
     } else{        
         SayHTML('<i>(You add a new ' + LANG.RandomQuality(1,priceMagnitude) +' ' + item.name + ' to your collection)</i>');
     }
@@ -180,11 +191,11 @@ function BoughtItem(item) {
 function AchiveHobby(item) {
     var elegibleHobbies = _.filter(LANG.hobbies, function (hobby) {var count = GAME_DATA.hobbies[hobby] || 0; return count < LANG.hobby_levels.length - 1 } );
     var hobby = elegibleHobbies[Math.floor(elegibleHobbies.length * Math.random())];
-    console.log(elegibleHobbies);
     var level = GAME_DATA.hobbies[hobby] || 0;
     level++;
+    GAME_DATA.hobbies[hobby] = level;
     
-    var phrase = '<i>(You are now a ' + LANG.hobby_levels[level] + ' ' + hobby + '.)</i>';
+    var phrase = '<i>(You are now a ' + LANG.hobby_levels[level - 1] + ' ' + hobby + '.)</i>';
     
     if (_.filter(LANG.hobbies, function (hobby) {var count = GAME_DATA.hobbies[hobby] || 0; return count < LANG.hobby_levels.length - 1 } ).length == 0) {
         phrase += '<br><br><i>(You can\'t learn any more hobbies.)</i>';
@@ -209,16 +220,21 @@ function CalculateTickInterval() {
 }
 
 function CalculateProfitPerTick() {
-    var spreadsheets = GAME_DATA.inventory["spreadsheet"] || 0;
-    var computers = GAME_DATA.inventory["computer"] || 0;
-    var cats = GAME_DATA.inventory["cat"] || 0;
+    var spreadsheets = GAME_DATA.inventory["spreadsheet"];
+    if (!spreadsheets) spreadsheets = 0;
+    var computers = GAME_DATA.inventory["computer"];
+    if (!computers) computers = 0;
+    var cats = GAME_DATA.inventory["cat"];
+    if (!cats) cats = 0;
+    
+    var roomMultiplier = 1.0 * Math.pow(1.1, GAME_DATA.inventory["room"]);
     
     var hobbyProfit = 0;
     _.forEach(GAME_DATA.hobbies, function(value, key, list) {
         hobbyProfit += 5 * Math.pow(1.1, value);
     });
     
-    return (1 + (GAME_DATA.inventory["clock"]/2.0) + (spreadsheets * 4) + hobbyProfit + (cats * 6.66)) * (1 + (computers/10.0));
+    return (1 + (GAME_DATA.inventory["clock"]/2.0) + (spreadsheets * 4) + hobbyProfit + (cats * 6.66)) * (1 + (computers/10.0)) * roomMultiplier;
 }
 
 
@@ -375,12 +391,11 @@ function UpdateMenu() {
     });
 }
 
-var roomdesc;
 
 function UpdateMainWindow() {
      GAME_DATA.window_el.empty();
  
-    if (!roomdesc) roomdesc = LANG.RandomQuality(1, 0);
+    if (!GAME_DATA.room_description) GAME_DATA.room_description = LANG.RandomQuality(1, 0);
  
      var including = "";
      _.forEach(GAME_DATA.inventory, function(value, key, list) {
@@ -397,7 +412,7 @@ function UpdateMainWindow() {
         including = _.shuffle(nothing)[0];
     }
  
-    var desc = "<p>You are in a vast, " + roomdesc + ' room containing ' + including + '</p>';
+    var desc = "<p>You are in a vast, " + GAME_DATA.room_description + ' room containing ' + including + '</p>';
     
     $(desc).appendTo(GAME_DATA.window_el);
     
@@ -416,12 +431,14 @@ function UpdateMainWindow() {
             var profitPerSecond = CalculateProfitPerTick()/(CalculateTickInterval()/1000);
             //profitPerSecond = Math.floor(profitPerSecond);
             
-            if (GAME_DATA.inventory["spreadsheet"] > 2) {
+            if (GAME_DATA.inventory["spreadsheet"] > 1) {
+                var sheets = GAME_DATA.inventory["spreadsheet"];
+                var f = Math.pow(10, sheets - 2);
                 computer += '<span class="spreadsheet">According to your advanced spreadsheets, you are saving exactly ';
-                computer += (Math.round(profitPerSecond * 100)/100.0) + ' wasted seconds every second.';
+                computer += (Math.round(profitPerSecond * f)/f) + ' wasted seconds every second.';
             } else {
-                computer += '<span class="spreadsheet">According to your spreadsheets, you are saving approximately ';
-                computer += FuzzifyValue(profitPerSecond, "wasted second") + '  every second.</span>';
+                computer += '<p class="spreadsheet">According to your spreadsheets, you are saving approximately ';
+                computer += FuzzifyValue(profitPerSecond, "wasted second") + '  every second.</p>';
             }            
             
         } else {
@@ -430,6 +447,19 @@ function UpdateMainWindow() {
         
         if (!GAME_DATA.inventory["internet"]) {
             computer += '<p>You can\'t do much without internet access.</p>';
+        } else {
+            var includingHobbies = "";
+            _.forEach(GAME_DATA.hobbies, function(value, key, list) {
+                if (value > 0) {
+                    includingHobbies += 'a <span class="hobby">' + LANG.hobby_levels[value - 1] + ' ' + key + '</span>, ';
+                }
+            });
+            
+            if (includingHobbies.length > 0) {
+                includingHobbies = includingHobbies.slice(0,-2) + '.';
+                
+                computer += '<div id="hobbies">Your hobbies include being ' + includingHobbies + '</div>';
+            }
         }
         
         computer += '</div>'
