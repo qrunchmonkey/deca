@@ -78,17 +78,54 @@ footer {
 }
 
 #game_console p {
-padding: 9px;
-margin: 0;
+    padding: 9px;
+    margin: 0;
 }
 
 #game_menu {
     position: absolute;
-    background: #fff;
     right: 18px;
     height:70%;
     width: 180px;
     }
+    
+#game_menu .item {
+    margin-top: 9px;
+    padding: 9px;
+    border: 1px solid #999;
+    color: #999;
+    background: #f7f7f7;
+}
+
+#game_menu .item.enabled:hover {
+    background: #fff;
+    border: 1px solid #37b;
+    cursor: pointer;
+}
+
+#game_menu .item.enabled {
+    border: 1px solid #444;
+    color: #444;
+    background: #f9f9f9;
+}
+
+#game_menu .item .name {
+    font-weight: 900;
+    float: left;
+}
+
+#game_menu .item .price {
+    float: right;    
+}
+
+#game_menu .item .desc {
+    clear:both;
+    display: block;
+    width: 100%;
+    font-size: 80%;
+    font-style: italic;
+    margin-top: 0.5em;
+}
     
 #game_window {
     margin-left: 252px;

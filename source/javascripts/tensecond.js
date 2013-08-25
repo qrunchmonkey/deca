@@ -1,8 +1,3 @@
-
-var LANG = {};
-
-LANG.tens = ['ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-
 var GAME_DATA = {};
 
 GAME_DATA.bank = 0;
@@ -10,7 +5,7 @@ GAME_DATA.rateOfTime = 1.0;
 GAME_DATA.numberOfClocks = 0;
 
 GAME_DATA.inventory = {};
-GAME_DATA.marketplace = [];
+GAME_DATA.marketplace = {};
 
 GAME_DATA.consoleQueue = [];
 
@@ -28,43 +23,12 @@ function SetupGame() {
     GAME_DATA.window_el = $('<div id="game_window">Stuff!</div>').appendTo(GAME_DATA.root_el);
 
     //TODO: load stuff here
-
-    UpdateBar();
+    
     SetupMarketplace();
+    UpdateMenu();
+    UpdateBar();
+    UpdateMainWindow()
     StartGame();
-}
-
-function MarketplaceItem(id, name, description, startPrice, priceFactor, visible) {
-    this.id = id;
-    this.name = name;
-    this.description = description;
-    this.startPrice = startPrice;
-    this.priceFactor = priceFactor;
-    this.visible = typeof visible !== 'undefined' ? visible : false;
-    
-    this.priceOfNthItem = function(count) {
-        return Math.floor(this.startPrice * Math.pow(priceFactor, count));
-    }
-    
-    this.nextPrice = function() {
-        var countOfThese = GAME_DATA.inventory[this.id];
-        return this.priceOfNthItem(countOfThese)
-    }
-    
-    this.buy = function() {
-        var priceOfThis = this.nextPrice();
-        
-        if (GAME_DATA.bank >= priceOfThis) {
-            GAME_DATA.bank -= priceOfThis;
-            GAME_DATA.inventory[this.id] += 1;
-            BoughtItem(this);
-            if (this.priceFactor == 0) {
-                RemoveMarketplaceItem(this);
-            }
-        } else {
-            SayHTML('<i>( You can\'t afford that. Nice try.</i>');
-        }
-    }
 }
 
 function AddMarketplaceItem(item) {
@@ -75,9 +39,7 @@ function AddMarketplaceItem(item) {
         }
         
         var item_html    = '<div class="item" id="' + item.id + '">';
-        item_html       += '<span class="name">'+ item.name + '</span>';
-        item_html       += '<span class="price">' + item.nextPrice() + ' $econds</span>';
-        item_html       += '<span class="desc">' + item.description + '</span>';
+        item_html       += item.contents();
         item_html       += '</div>';
         
         $(item_html).appendTo(GAME_DATA.menu_el).click(function() {
@@ -88,14 +50,15 @@ function AddMarketplaceItem(item) {
 
 function RemoveMarketplaceItem(item) {
     delete GAME_DATA.marketplace[item.id];
+    $('#' + item.id).remove();
 }
 
 function SetupMarketplace() {
     AddMarketplaceItem(new MarketplaceItem(
                                             "clock", /* id */
                                             "Clock", /* name */
-                                            "Time goes slower but is more valuable. As they say, 'A watched clock never boils.", /* description */
-                                            10, /* start price */
+                                            "Time goes slower but is more valuable. As they say, 'A watched clock never boils.'", /* description */
+                                            6, /* start price */
                                             1.1, /* price factor [$ * (f^n)] */
                                             true /* visible */
                                             ));
@@ -104,7 +67,7 @@ function SetupMarketplace() {
                                             "tchotchke", /* id */
                                             "Tchotchke", /* name */
                                             "Looking at things might help time go faster.", /* description */
-                                            45, /* start price */
+                                            12, /* start price */
                                             1.1, /* price factor [$ * (f^n)] */
                                             true /* visible */
                                             ));
@@ -113,7 +76,7 @@ function SetupMarketplace() {
                                             "computer", /* id */
                                             "Computer", /* name */
                                             "Unlocks new and exciting ways of wasting time.", /* description */
-                                            90, /* start price */
+                                            45, /* start price */
                                             0 /* price factor [$ * (f^n)] */
                                             ));
                                             
@@ -121,7 +84,21 @@ function SetupMarketplace() {
 }
 
 function BoughtItem(item) {
-    SayHTML('<i>(You add a shiny new ' + item.name + ' to your collection)</i>');
+    var priceMagnitude = Math.min(5,Math.round((Math.log(item.nextPrice())/Math.LN10) -     (Math.log(item.startPrice)/Math.LN10)))
+    if (item.id == "tchotchke") {
+        var tch = _.shuffle(LANG.tchotchke)[0];
+        SayHTML('<i>(You add a new ' + LANG.RandomQuality(1,priceMagnitude) + ' ' + tch + ' to your collection)</i>');
+    } else if (item.id == "computer") {
+        GAME_DATA.consoleQueue = GAME_DATA.consoleQueue.concat(LANG.computer);
+    } else{        
+        SayHTML('<i>(You add a new ' + LANG.RandomQuality(1,priceMagnitude) +' ' + item.name + ' to your collection)</i>');
+    }
+    
+    
+    $('#' + item.id).html(item.contents());
+    UpdateMenu();
+    UpdateMainWindow()
+    UpdateBar();
 }
 
 
@@ -129,26 +106,21 @@ function StartGame() {
     /* TODO: By the time this is called from SetupGame() I should have loaded any saved game data */
     
     
-    GAME_DATA.consoleQueue.push('<strong>* You hear a door creak open behind you. *</strong><br><br><i>(Revealing a sharply dressed man in a suit.)</i>');
-    GAME_DATA.consoleQueue.push('<strong>[SUIT]</strong> Oh! Hello. I didn\'t see you there.');
-    GAME_DATA.consoleQueue.push('<i>(He was the one who opened the door...)</i>');
-    GAME_DATA.consoleQueue.push('<strong>[SUIT]</strong> Well, since you\'re already sitting down...');
-    GAME_DATA.consoleQueue.push('<strong>[SUIT]</strong> As you know, here at Microsecond International we\'ve found a way to convert wasted time directly into STUFF.');
-    GAME_DATA.consoleQueue.push('<strong>[SUIT]</strong> That\'s right! Stuff! Real, actual things.<br><br><i>(Who asked you?)</i>');
-    GAME_DATA.consoleQueue.push('<strong>[SUIT]</strong> Yuuup! It\'s basically the American Dream on crack.');
-    GAME_DATA.consoleQueue.push('<strong>[SUIT]</strong> Anyway, Time\'s not going to waste itself. Get slacking!');
-    GAME_DATA.consoleQueue.push('<strong>* The door slams shut behind you. *</strong>')
+    GAME_DATA.consoleQueue = GAME_DATA.consoleQueue.concat(LANG.intro);
+    
     //this way the game starts fast and then figures out the interval from there.
     GAME_DATA.lastTickInterval = 0;
     GAME_DATA.tickID = window.setInterval(GameTick, 2000);
 }
 
 function CalculateTickInterval() {
+    GAME_DATA.rateOfTime = 1.0 * Math.pow(0.98, GAME_DATA.inventory["clock"]) * Math.pow(1.1, GAME_DATA.inventory["tchotchke"]);
+    
     return 10000 * (1 / GAME_DATA.rateOfTime); 
 }
 
 function CalculateProfitPerTick() {
-    return 1;
+    return 1 + (GAME_DATA.inventory["clock"]/2.0);
 }
 
 
@@ -159,7 +131,8 @@ function GameTick() {
     
     //update UI state
     UpdateBar();
-    
+    UpdateMenu();
+
     //Say the first thing in the queue
     if (GAME_DATA.consoleQueue.length) {
         var text = GAME_DATA.consoleQueue.shift();
@@ -186,7 +159,7 @@ function GameTick() {
 function FuzzifyValue(value, unit) {
 
     var fixedValue = "" + Math.round(value);
-    var fixedUnit = ' ' + unit + ((value != 1)? 's' : '');
+    var fixedUnit = ' ' + LANG.Pluralize(unit, value);
     
     if (unit == "wasted second") {
         if (value >= 60) {
@@ -219,7 +192,7 @@ function FuzzifyValue(value, unit) {
             fixedValue = "slightly faster than usual";
         } else if (value > 1) {
             fixedValue = "slowly";
-        } else  if (value > 0.99) {
+        } else  if (value > 0.90) {
             fixedValue = "very slowly";
         } else {
             fixedValue = "excruciatingly slowly";
@@ -251,5 +224,36 @@ function UpdateBar() {
     bar_contents += '<span class="speed">Time is going by ' + FuzzifyValue(GAME_DATA.rateOfTime, "dt") + '.</span>'
     
     $(bar_contents).appendTo(GAME_DATA.bar_el);
+}
 
+function UpdateMenu() {
+    _.forEach(GAME_DATA.marketplace, function(value, key, list) {
+        var el = $('#' + value.id);
+        var avaliable = (GAME_DATA.bank >= value.nextPrice())
+        if (avaliable != el.hasClass("enabled")) el.toggleClass("enabled");
+    });
+}
+
+function UpdateMainWindow() {
+     GAME_DATA.window_el.empty();
+ 
+     var including = "";
+     _.forEach(GAME_DATA.inventory, function(value, key, list) {
+        if (value > 0) {
+            var q = LANG.RandomQuality(1, Math.min(4, Math.floor(value/10)));
+            including += '' + value + ' ' + q + ' ' + LANG.Pluralize(key, value) + ', ';
+        }
+     });
+ 
+    if (including.length > 0) {
+        including = including.slice(0,-2) + '.'
+    } else {
+        var nothing = ['nothing at all.', 'large quantities of unused space.', 'nothing but an echo.', 'nothing whatsoever.'];
+        including = _.shuffle(nothing)[0];
+    }
+ 
+    var desc = "<p>A vast, " + LANG.RandomQuality(2, 2) + ' room containing ' + including + '</p>';
+    
+    $(desc).appendTo(GAME_DATA.window_el);
+ 
 }
