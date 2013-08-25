@@ -6,14 +6,13 @@ function MarketplaceItem(id, name, description, startPrice, priceFactor, visible
     this.startPrice = startPrice;
     this.priceFactor = priceFactor;
     this.visible = typeof visible !== 'undefined' ? visible : false;
-    
+    this.boughtCount = 0;
     this.priceOfNthItem = function(count) {
         return Math.floor(this.startPrice * Math.pow(priceFactor, count));
     }
     
     this.nextPrice = function() {
-        var countOfThese = GAME_DATA.inventory[this.id];
-        return this.priceOfNthItem(countOfThese)
+        return this.priceOfNthItem(this.boughtCount)
     }
     
     this.buy = function() {
@@ -22,6 +21,7 @@ function MarketplaceItem(id, name, description, startPrice, priceFactor, visible
         if (GAME_DATA.bank >= priceOfThis) {
             GAME_DATA.bank -= priceOfThis;
             GAME_DATA.inventory[this.id] += 1;
+            this.boughtCount++;
             BoughtItem(this);
             if (this.priceFactor == 0) {
                 RemoveMarketplaceItem(this);

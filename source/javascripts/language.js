@@ -18,7 +18,17 @@ LANG.computer = [
     '<i>(Looking over your new options, you come to a shocking realization. The entire operating system is powered by microtransactions!)</i>'
 ];
 
+LANG.internet = [
+     '<strong>* You hear a grinding sound and turn around to try and identify it.*</strong>',
+     '<i>(A large drill bit pokes through the wall from the other side)</i>',
+     '<i>(A burly man shoves you out of the way, and runs a cable from your computer out through the hole in the wall.)</i>',
+     '<strong>[CABLE GUY]</strong> Ok done. Sign here.</strong>',
+     '<i>(You sign the form and your internet access is enabled.)</i>'
+     ];
+
+
 LANG.tens = ['ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+LANG.ones = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 
 LANG.qualities = [
 ['nondescript', 'plain', 'simple', 'grey', 'gray', 'beige', 'basic', 'government issue', 'prison grade', 'second-hand', 'counterfeit'],
@@ -27,6 +37,9 @@ LANG.qualities = [
 ['crystal', 'rich, corinthian leather', 'gold', 'golden', 'shimmering', 'candy-apple red', , 'marble', 'glazed', 'gold-leafed', 'ancient', 'magical', 'hand made']
 ];
 
+LANG.hobbies = ['programmer', 'redditor', 'botanist', 'chess player', 'Magic: The Gathering player', 'alchemist', 'glass blower', 'chef', 'concert pianist', 'theoretical physicist', 'internet troll', 'whittler', 'potato enthusiast', 'fan-fiction author'];
+
+LANG.hobby_levels = ['useless', 'beginner', 'amateur', 'hobbyist', 'layman', 'greenhorn', 'novice', 'trainee', 'apprentice', 'journeyman' ,'professional', 'world-class'];
 
 LANG.tchotchke = ['figurine', 'cat figurine', 'kitten figurine', 'bear figurine', 'frog figurine', 'beetle figurine', 'VW Beetle figurine', 'Beatle figurine', 'potato figurine', 'picture', 'troll doll', 'cat statue', 'potato trophy', 'paperweight', 'stapler', 'cup', 'mug'];
 

@@ -95,6 +95,8 @@ footer {
     border: 1px solid #999;
     color: #999;
     background: #f7f7f7;
+    cursor: default;
+
 }
 
 #game_menu .item.enabled:hover {
@@ -130,5 +132,14 @@ footer {
 #game_window {
     margin-left: 252px;
     margin-right: 216px;
-     background: #fff;
+}
+
+#lights .light {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    margin: 9px;
+    background: #f3f3f3;
+    box-shadow: 0 0 6px #fff, 0 0 6px #fff inset, 0 0 6px #fff, 0 0 6px #fff inset;
 }
