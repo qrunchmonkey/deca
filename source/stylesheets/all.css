@@ -61,7 +61,7 @@ footer {
     padding-right: 18px;
 }
 
-#game_bar .value {
+#game_bar .value, #computer .value {
     font-weight: 900;
     color: #222;
 }
@@ -75,6 +75,9 @@ footer {
     overflow-y: scroll;
     text-align:left;
     font-size: 90%;
+    margin-top: 9px;
+    border-radius: 3px;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 #game_console p {
@@ -82,11 +85,27 @@ footer {
     margin: 0;
 }
 
+#game_console p:before {
+    margin-left: 18px;
+    margin-right: 18px;
+    width: auto;
+    display:block;
+    border-bottom: 1px solid #ccc;
+    content: '';
+    margin-bottom: 1em;
+
+}
+
+#game_console p:first-child:before {
+    display:none;
+}
+
 #game_menu {
     position: absolute;
     right: 18px;
-    height:70%;
     width: 180px;
+    overflow-y: scroll;
+
     }
     
 #game_menu .item {
@@ -96,7 +115,7 @@ footer {
     color: #999;
     background: #f7f7f7;
     cursor: default;
-
+    border-radius: 3px;
 }
 
 #game_menu .item.enabled:hover {

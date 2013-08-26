@@ -7,18 +7,20 @@ GAME_DATA.marketplace = {};
 
 GAME_DATA.consoleQueue = [];
 GAME_DATA.hobbies = {};
+GAME_DATA.cats = {};
 
 GAME_DATA.rateOfTime = function() {
     
     var hobbyMultiplier = 1;
     _.forEach(GAME_DATA.hobbies, function(value, key, list) {
-        hobbyMultiplier *= Math.pow(1.04, value);
+        //hobbyMultiplier *= Math.pow(0.90, Math.ceil(value/4));
+        hobbyMultiplier *= 0.9;
     });
     
     var lightCount = GAME_DATA.inventory["light"] || 0;
     
     var lightMultiplier = 1 * Math.pow(1.1, lightCount);
-    return 1.0 * Math.pow(0.98, GAME_DATA.inventory["clock"]) * Math.pow(1.025, GAME_DATA.inventory["tchotchke"]) * hobbyMultiplier * lightMultiplier;
+    return 1.0 * Math.pow(0.98, GAME_DATA.inventory["clock"]) * Math.pow(1.035, GAME_DATA.inventory["tchotchke"]) * hobbyMultiplier * lightMultiplier;
 };
 
 
@@ -97,17 +99,40 @@ function SetupMarketplace() {
                                             "room", /* id */
                                             "Room Upgrade", /* name */
                                             "Adds 10% to your profit by impressing clients.", /* description */
-                                            360, /* start price */
-                                            1.1 /* price factor [$ * (f^n)] */
+                                            600, /* start price */
+                                            1.2 /* price factor [$ * (f^n)] */
                                             ));
     
 }
 
 function BoughtItem(item) {
     var priceMagnitude = Math.min(5,Math.round((Math.log(item.nextPrice())/Math.LN10) -     (Math.log(item.startPrice)/Math.LN10)))
-    if (item.id == "tchotchke") {
+    if (item.id == "clock") {
+        var tch = _.shuffle(LANG.clock)[0];
+        SayHTML('<i>(You add a new ' + LANG.RandomQuality(1,priceMagnitude) + ' ' + tch + ' to your collection)</i>');
+        var count = GAME_DATA.inventory[item.id];
+        if (count >= 50) {
+            item.description = "A collection of this magnitude awesome comes at a price.";
+        }else if (count >= 40) {
+            item.description = "It might be time to admit you have a problem.";
+        } else if (count >= 25) {
+            GAME_DATA.consoleQueue.push('<strong>* The ticking of the clocks seems to be getting slower. *</strong>');
+        } else if (count >= 10) {
+            item.description = "Each new clock adds another tock to the cacophony of ticks, tocks and chimes." 
+        } else if (count >= 1) {
+            item.description = "More clocks means more wasted time. Right?";
+        }
+    }else if (item.id == "tchotchke") {
         var tch = _.shuffle(LANG.tchotchke)[0];
         SayHTML('<i>(You add a new ' + LANG.RandomQuality(1,priceMagnitude) + ' ' + tch + ' to your collection)</i>');
+        var count = GAME_DATA.inventory[item.id];
+        if (count >= 50) {
+            item.description = "Well, just one more couldn't hurt.";
+        }else if (count >= 10) {
+            item.description = "Rule one of hoarding: The more the merrier.";
+        } else if (count >= 1) {
+            item.description = "Looking at more things might help time go by even faster.";
+        }
     } else if (item.id == "computer") {
         GAME_DATA.consoleQueue = GAME_DATA.consoleQueue.concat(LANG.computer);
         SayHTML('<i>(You got a new computer!)</i>');
@@ -131,9 +156,9 @@ function BoughtItem(item) {
         AddMarketplaceItem(new MarketplaceItem(
                                             "light", /* id */
                                             "Blinkenlichten", /* name */
-                                            "A light that blinks to let you know something is happening.", /* description */
+                                            "Studies show that progress indicators make time seem to go up to 10% faster.", /* description */
                                             120, /* start price */
-                                            1.5 /* price factor [$ * (f^n)] */
+                                            2.1 /* price factor [$ * (f^n)] */
                                             ));
                                             
     } else if (item.id == "internet") {
@@ -165,7 +190,7 @@ function BoughtItem(item) {
                                             "Learn a Hobby", /* name */
                                             "Waste time learning how to do something useless.", /* description */
                                             300, /* start price */
-                                            1.1 /* price factor [$ * (f^n)] */
+                                            1.5 /* price factor [$ * (f^n)] */
                                             ));
                                             
     } else if (item.id == "spreadsheet") {
@@ -175,8 +200,14 @@ function BoughtItem(item) {
         AchiveHobby(item);
     } else if (item.id == "room") {
         SayHTML('<i>(As if by magic, the room suddenly becomes a little nicer.)</i>');
+        var count = GAME_DATA.inventory[item.id];
+        if (count == 1) {
+            item.description = "Adds an additional 10% to your profit by impressing clients.";
+        }
         var roomLevel = GAME_DATA.inventory["room"];
-        GAME_DATA.room_description = LANG.RandomQuality(roomLevel + 1, roomLevel);
+        GAME_DATA.room_description = LANG.RandomQuality(Math.min(1, roomLevel / 2), roomLevel);
+    } else if (item.id == "cat") { d
+        GetPussy();
     } else{        
         SayHTML('<i>(You add a new ' + LANG.RandomQuality(1,priceMagnitude) +' ' + item.name + ' to your collection)</i>');
     }
@@ -202,6 +233,20 @@ function AchiveHobby(item) {
         RemoveMarketplaceItem(item);
     }
     SayHTML(phrase);
+    
+    if (GAME_DATA.inventory["hobby"] == 1) {
+        item.description = "Waste time learning how to do something useless or improving an existing skill."
+    }
+}
+
+function GetPussy(item) {
+    var cat = _.shuffle(LANG.cat)[0];
+    var countCats = GAME_DATA.cats[cat] || 0;
+    countCats++;
+    GAME_DATA.cats[cat] = countCats;
+    
+    SayHTML('<i>(You add ' + ((countCats > 1)? 'another' : 'a') + ' photo ' + cat + '.)</i>');
+    
 }
 
 function StartGame() {
@@ -227,14 +272,17 @@ function CalculateProfitPerTick() {
     var cats = GAME_DATA.inventory["cat"];
     if (!cats) cats = 0;
     
+    var tchCount = GAME_DATA.inventory["tchotchke"] || 0;
+    var tchTax = Math.pow(0.965, tchCount - 50);
+    if (tchCount < 50) tchTax = 1;
     var roomMultiplier = 1.0 * Math.pow(1.1, GAME_DATA.inventory["room"]);
     
     var hobbyProfit = 0;
     _.forEach(GAME_DATA.hobbies, function(value, key, list) {
-        hobbyProfit += 5 * Math.pow(1.1, value);
+        hobbyProfit += 15 * Math.pow(1.5, value);
     });
     
-    return (1 + (GAME_DATA.inventory["clock"]/2.0) + (spreadsheets * 4) + hobbyProfit + (cats * 6.66)) * (1 + (computers/10.0)) * roomMultiplier;
+    return (1 + (GAME_DATA.inventory["clock"]/2.0) + (spreadsheets * 4) + hobbyProfit + (cats * 6.66)) * (1 + (computers/10.0)) * roomMultiplier * tchTax;
 }
 
 
@@ -268,9 +316,18 @@ function GameTick() {
         GAME_DATA.lastTickInterval = nextInterval;
         GAME_DATA.tickID = window.setInterval(GameTick, GAME_DATA.lastTickInterval);
     }
-    
+    var n = $('.light').size();
+    var i = 0;
+    var s = nextInterval / ((n * 2) + 1);
+    var d = 0;
+    console.log(s + ' ' + n);
+    $('.light').each(function(i, e) {
+    console.log(d + ' ' + e);
+        $(e).finish().delay(d+1).animate({"opacity":0}, {duration: s, easing: "easeOutExpo"}).delay(s).animate({"opacity":1},{duration:(s), easing: "easeInExpo"});
+        d += s * 2;
+    });
     //update the light
-    $('.light').finish().animate({"opacity":1}, {duration: 400, easing: "easeInExpo"}).animate({"opacity":0},{duration:(nextInterval - 400), easing: "easeOutExpo"});
+    //$('.light').animate({"opacity":1}, {duration: 400, easing: "easeInExpo"}).animate({"opacity":0},{duration:(nextInterval - 400), easing: "easeOutExpo"});
 }
 
 function FuzzifyValue(value, unit) {
@@ -284,6 +341,7 @@ function FuzzifyValue(value, unit) {
             var fixedUnit = ' ' + LANG.Pluralize("wasted minute", Math.floor(value));
             
             if (value >= 100) {
+                fixedValue = Math.round(value * 10)/10;
             } else if (value >= 10) {
                 var aproxValue = Math.floor(value/10);
                 var remainder = (value/10.0) - (aproxValue);
@@ -318,9 +376,12 @@ function FuzzifyValue(value, unit) {
             fixedValue = "several";
         } else if (value >= 3) {
             fixedValue = "a few";
-        } else if (value >= 2) {
+        } else if (value > 1.6) {
             fixedValue = "a couple";
-        } else if (value > 1) {
+        } else if (value > 1.2) {
+            fixedValue = "more than one";
+            fixedUnit = ' ' + unit;
+        } else if (value > 0.9) {
             fixedValue = "one";
             fixedUnit = ' ' + unit;
         } else if (value > 0.75) {
@@ -378,7 +439,15 @@ function UpdateBar() {
     
     var bar_contents = '<span class="bank">You have saved ' + FuzzifyValue(GAME_DATA.bank, "wasted second") + '.</span>';
     
-    bar_contents += '<span class="speed">Time is going by ' + FuzzifyValue(GAME_DATA.rateOfTime(), "dt") + '.</span>'
+    bar_contents += '<span class="speed">Time is going by ' + FuzzifyValue(GAME_DATA.rateOfTime(), "dt") + '.';
+    
+    var spreadsheets = GAME_DATA.inventory["spreadsheet"] || 0;
+    
+    if (spreadsheets >= 3) {
+        bar_contents += ' (' + Math.round(GAME_DATA.rateOfTime() * 100) + '%)';
+    }
+    
+    bar_contents += '</span>';
     
     $(bar_contents).appendTo(GAME_DATA.bar_el);
 }
@@ -399,7 +468,7 @@ function UpdateMainWindow() {
  
      var including = "";
      _.forEach(GAME_DATA.inventory, function(value, key, list) {
-        if (value > 0 && key != "hobby") {
+        if (value > 0 && key != "hobby" && key != "light" && key != "computer" && key != "internet" && key != "cat" && key != "room") {
             var q = LANG.RandomQuality(1, Math.min(4, Math.floor(value/10)));
             including += '' + value + ' ' + q + ' ' + LANG.Pluralize(key, value) + ', ';
         }
@@ -433,9 +502,14 @@ function UpdateMainWindow() {
             
             if (GAME_DATA.inventory["spreadsheet"] > 1) {
                 var sheets = GAME_DATA.inventory["spreadsheet"];
-                var f = Math.pow(10, sheets - 2);
-                computer += '<span class="spreadsheet">According to your advanced spreadsheets, you are saving exactly ';
-                computer += (Math.round(profitPerSecond * f)/f) + ' wasted seconds every second.';
+                var m = ("" + Math.round(profitPerSecond)).length - 1;
+                var f = Math.pow(10, sheets - 2 - m);
+                console.log('p ' + profitPerSecond +' f ' + f + ' m ' + m );
+                computer += '<span class="spreadsheet">According to your advanced spreadsheets, you are saving nearly ';
+                computer += '<span class="value">' + (Math.ceil(profitPerSecond * f)/f) + '</span> wasted seconds every second.';
+                if (GAME_DATA.inventory["spreadsheet"] > 4) {
+                    computer += ' (At a base rate of ' + CalculateProfitPerTick() + ' seconds)'
+                }
             } else {
                 computer += '<p class="spreadsheet">According to your spreadsheets, you are saving approximately ';
                 computer += FuzzifyValue(profitPerSecond, "wasted second") + '  every second.</p>';
@@ -459,6 +533,17 @@ function UpdateMainWindow() {
                 includingHobbies = includingHobbies.slice(0,-2) + '.';
                 
                 computer += '<div id="hobbies">Your hobbies include being ' + includingHobbies + '</div>';
+            }
+            
+            var includingCats = ""
+            _.forEach(GAME_DATA.cats, function(value, key, list) {
+                includingCats += value + ' ' + LANG.Pluralize("photo", value) + ' ' + key + ', ';
+            });
+            
+            if (includingCats.length > 0) {
+                includingCats = includingCats.slice(0,-2) + '.';
+                computer += '<p id="cats">You have a collection of ' + GAME_DATA.inventory["cat"] + ' cat pics, including: ' + includingCats;
+                computer += '</p>';
             }
         }
         
