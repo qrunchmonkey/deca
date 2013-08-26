@@ -206,7 +206,7 @@ function BoughtItem(item) {
         }
         var roomLevel = GAME_DATA.inventory["room"];
         GAME_DATA.room_description = LANG.RandomQuality(Math.min(1, roomLevel / 2), roomLevel);
-    } else if (item.id == "cat") { d
+    } else if (item.id == "cat") {
         GetPussy();
     } else{        
         SayHTML('<i>(You add a new ' + LANG.RandomQuality(1,priceMagnitude) +' ' + item.name + ' to your collection)</i>');
@@ -241,11 +241,14 @@ function AchiveHobby(item) {
 
 function GetPussy(item) {
     var cat = _.shuffle(LANG.cat)[0];
+    if (Math.random() > 0.875) {
+        cat += ' [FOIL]';
+    }
     var countCats = GAME_DATA.cats[cat] || 0;
     countCats++;
     GAME_DATA.cats[cat] = countCats;
     
-    SayHTML('<i>(You add ' + ((countCats > 1)? 'another' : 'a') + ' photo ' + cat + '.)</i>');
+    SayHTML('<i>(You add ' + ((countCats > 1)? 'another' : 'a') + ' photo ' + cat + ' to your collection.)</i>');
     
 }
 
@@ -394,7 +397,11 @@ function FuzzifyValue(value, unit) {
     } else if (unit == "dt") {
     
         fixedUnit = '';
-        if (value > 2.5) {
+        if (value > 5) {
+            fixedValue = "beyond plaid";
+        }else if (value > 4) {
+            fixedValue = "plaid";
+        }else if (value > 2.5) {
             fixedValue = "alarmingly quickly";
         }else  if (value > 1.9) {
             fixedValue = "rather quickly";
@@ -412,8 +419,10 @@ function FuzzifyValue(value, unit) {
             fixedValue = "excruciatingly slowly";    
         } else if (value > 0.6) {
             fixedValue = "like molasses";
-        } else {
+        } else if (value > 0.4){
             fixedValue = "slower than molasses";
+        } else {
+            fixedValue = "at a standstill";
         }
     }    
     return '<span class="value">' + fixedValue + '</span>' + fixedUnit;
@@ -508,7 +517,10 @@ function UpdateMainWindow() {
                 computer += '<span class="spreadsheet">According to your advanced spreadsheets, you are saving nearly ';
                 computer += '<span class="value">' + (Math.ceil(profitPerSecond * f)/f) + '</span> wasted seconds every second.';
                 if (GAME_DATA.inventory["spreadsheet"] > 4) {
-                    computer += ' (At a base rate of ' + CalculateProfitPerTick() + ' seconds)'
+                var p = CalculateProfitPerTick();
+                var m = ("" + Math.round(p)).length - 1;
+                var f = Math.pow(10, sheets - 2 - m);
+                    computer += ' (At a base rate of about ' + Math.ceil(p * f)/f + ' seconds)';
                 }
             } else {
                 computer += '<p class="spreadsheet">According to your spreadsheets, you are saving approximately ';
